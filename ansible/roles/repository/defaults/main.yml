@@ -1,0 +1,3 @@
+---
+repository_names: "{{ repositories | default([]) }}"
+repository_no_log: false     # поставь false для отладки

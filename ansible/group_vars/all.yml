@@ -1,0 +1,23 @@
+---
+# ---------- Общие ----------
+deploy_user: "{{ ansible_user }}"
+
+# ---------- GitHub / repository ----------
+github_username: LCcodder
+github_token: "{{ vault_github_token }}"
+repos_dir_name: lab
+repos_base_dir: "/root/{{ repos_dir_name }}"
+repository_version: HEAD                 # ветка/тег по умолчанию
+repository_update: true                  # делать git pull при повторном запуске
+
+# ---------- Docker ----------
+docker_users:
+  - "{{ deploy_user }}"
+lazydocker_version: "0.25.2"             # проверь актуальную на github.com/jesseduffield/lazydocker/releases
+docker_builder_prune_enabled: true
+docker_builder_prune_until: "168h"       # удалять билд-кеш старше 7 дней
+docker_builder_prune_minute: "0"
+docker_builder_prune_hour: "4"
+docker_builder_prune_day: "*"
+docker_builder_prune_weekday: "0"        # раз в неделю, воскресенье 04:00
+

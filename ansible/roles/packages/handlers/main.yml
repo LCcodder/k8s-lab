@@ -1,0 +1,6 @@
+---
+- name: Restart Ubuntu server
+  ansible.builtin.reboot:
+    msg: "Rebooting to apply system updates"
+    reboot_timeout: "{{ update_ubuntu_reboot_timeout }}"
+  when: update_ubuntu_allow_reboot

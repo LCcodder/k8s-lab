@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-api
+  namespace: kafka-template
+  labels:
+    app: producer-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: producer-api
+  template:
+    metadata:
+      labels:
+        app: producer-api
+    spec:
+      imagePullSecrets:
+        - name: dockerhub
+      initContainers:
+        - name: wait-for-deps
+          image: busybox:1.36
+          envFrom:
+            - configMapRef:
+                name: app-config
+          command: ["sh", "-c"]
+          args:
+            - |
+              until nc -z "$KAFKA_HOST" "$KAFKA_PORT"; do echo "waiting for kafka"; sleep 3; done
+              until nc -z "$DB_HOST" "$DB_PORT"; do echo "waiting for mysql"; sleep 3; done
+      containers:
+        - name: producer-api
+          image: "{{ .Values.image.repository }}:{{ required "укажи --set image.tag" .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: API_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: API_MASTER_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

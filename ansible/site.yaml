@@ -1,0 +1,17 @@
+---
+# Запуск всего:        ansible-playbook site.yml --ask-vault-pass
+# Один сервер:         ... --limit infra-1
+# Одна роль:           ... --tags nginx
+# Выпуск сертификатов: ... --tags certs --limit infra-1   (по умолчанию НЕ запускается)
+- name: Lafazan homelab
+  hosts: lab
+  become: true
+  gather_facts: false
+  vars_files:
+    - group_vars/vault.yml
+    - host_vars/node.yml
+
+  roles:
+      - { role: packages, tags: [packages] }
+      - { role: docker, tags: [docker] }
+      - { role: repository, tags: [repository] }

@@ -1,0 +1,4 @@
+---
+nginx_conf_src: "{{ inventory_hostname }}/default.conf"     # относительно roles/nginx/files/
+nginx_conf_dest: /etc/nginx/sites-available/default
+nginx_site_enabled_link: /etc/nginx/sites-enabled/default

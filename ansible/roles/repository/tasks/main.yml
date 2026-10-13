@@ -1,0 +1,26 @@
+---
+- name: Install git
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Ensure repos base dir exists
+  ansible.builtin.file:
+    path: "{{ repos_base_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Clone / update organization repositories
+  ansible.builtin.git:
+    repo: "https://{{ github_username }}:{{ github_token }}@github.com/{{ github_username }}/{{ item }}"
+    dest: "{{ repos_base_dir }}/{{ item }}"
+    version: "{{ repository_version }}"
+    update: "{{ repository_update }}"
+  loop: "{{ repository_names }}"
+  become: true
+  no_log: "{{ repository_no_log }}"

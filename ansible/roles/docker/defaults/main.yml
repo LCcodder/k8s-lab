@@ -1,0 +1,10 @@
+---
+docker_users: []
+lazydocker_version: "0.24.1"
+docker_builder_prune_enabled: true
+docker_builder_prune_until: "168h"
+docker_builder_prune_minute: "0"
+docker_builder_prune_hour: "4"
+docker_builder_prune_day: "*"
+docker_builder_prune_weekday: "0"
+docker_compose_standalone_version: "latest"
