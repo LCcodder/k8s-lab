@@ -1,0 +1,6 @@
+{% if k3s_nodeport_addresses %}
+kube-proxy-arg:
+  - "nodeport-addresses={{ k3s_nodeport_addresses }}"
+{% else %}
+{}
+{% endif %}

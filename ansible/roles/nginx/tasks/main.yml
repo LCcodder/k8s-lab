@@ -12,3 +12,45 @@
     enabled: true
     state: started
 
+- name: Install openssl
+  ansible.builtin.apt:
+    name: openssl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [nginx, nginx_cert]
+
+- name: Generate self-signed cert for dashboard (with SAN)
+  ansible.builtin.command:
+    argv:
+      - openssl
+      - req
+      - -x509
+      - -nodes
+      - -days
+      - "{{ nginx_dashboard_cert_days }}"
+      - -newkey
+      - rsa:2048
+      - -keyout
+      - "{{ nginx_dashboard_cert_dir }}/{{ nginx_dashboard_cert_name }}.key"
+      - -out
+      - "{{ nginx_dashboard_cert_dir }}/{{ nginx_dashboard_cert_name }}.crt"
+      - -subj
+      - "/CN={{ nginx_dashboard_cert_ip }}"
+      - -addext
+      - "subjectAltName=IP:{{ nginx_dashboard_cert_ip }}"
+    creates: "{{ nginx_dashboard_cert_dir }}/{{ nginx_dashboard_cert_name }}.crt"
+  notify: Reload nginx
+  tags: [nginx, nginx_cert]
+
+- name: Set permissions on dashboard cert and key
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ nginx_dashboard_cert_dir }}/{{ nginx_dashboard_cert_name }}.key", mode: "0600" }
+    - { path: "{{ nginx_dashboard_cert_dir }}/{{ nginx_dashboard_cert_name }}.crt", mode: "0644" }
+  when: not ansible_check_mode
+  tags: [nginx, nginx_cert]

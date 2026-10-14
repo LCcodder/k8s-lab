@@ -84,6 +84,7 @@
   register: compose_latest
   when: docker_compose_standalone_version == 'latest'
   tags: docker_install
+  check_mode: false
 
 - name: Resolve docker-compose version
   ansible.builtin.set_fact:
@@ -98,6 +99,7 @@
   changed_when: false
   failed_when: false
   tags: docker_install
+  check_mode: false
 
 - name: Install docker-compose (standalone)
   ansible.builtin.get_url:
@@ -135,6 +137,7 @@
   register: lazydocker_latest
   when: lazydocker_version == 'latest'
   tags: lazydocker
+  check_mode: false
 
 - name: Resolve lazydocker version
   ansible.builtin.set_fact:
@@ -149,6 +152,7 @@
   changed_when: false
   failed_when: false
   tags: lazydocker
+  check_mode: false
 
 - name: Install lazydocker
   ansible.builtin.unarchive:

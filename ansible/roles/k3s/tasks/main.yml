@@ -1,0 +1,154 @@
+---
+# === k3s ===
+- name: Install curl
+  ansible.builtin.apt:
+    name: curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  tags: k3s
+
+- name: Ensure /etc/rancher/k3s exists
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: "0755"
+  tags: k3s
+
+- name: Configure k3s (NodePort addresses)
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0644"
+  notify: Restart k3s
+  tags: k3s
+
+- name: Install k3s
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -sfL https://get.k3s.io | sh -
+    executable: /bin/bash
+    creates: /usr/local/bin/k3s
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+  tags: k3s
+
+- name: Apply pending handlers (restart k3s if config changed)
+  ansible.builtin.meta: flush_handlers
+  tags: k3s
+
+- name: Wait until node is Ready
+  ansible.builtin.command: /usr/local/bin/k3s kubectl wait --for=condition=Ready node --all --timeout=120s
+  changed_when: false
+  check_mode: false
+  tags: k3s
+
+- name: Set KUBECONFIG for root
+  ansible.builtin.lineinfile:
+    path: /root/.bashrc
+    line: "export KUBECONFIG={{ k3s_kubeconfig }}"
+    create: true
+    mode: "0644"
+  tags: k3s
+
+- name: Get nodes
+  ansible.builtin.command: /usr/local/bin/k3s kubectl get nodes -o wide
+  register: k3s_nodes
+  changed_when: false
+  check_mode: false
+  tags: k3s
+
+- name: Show nodes
+  ansible.builtin.debug:
+    var: k3s_nodes.stdout_lines
+  tags: k3s
+
+# === Helm ===
+- name: Install helm
+  ansible.builtin.shell:
+    cmd: set -o pipefail && curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    executable: /bin/bash
+    creates: /usr/local/bin/helm
+  when: k3s_dashboard_enabled | bool
+  tags: [k3s, k3s_dashboard]
+
+# === Kubernetes Dashboard ===
+- name: Add kubernetes-dashboard helm repo
+  ansible.builtin.command: helm repo add kubernetes-dashboard https://kubernetes-retired.github.io/dashboard/
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: k3s_helm_repo
+  changed_when: "'has been added' in k3s_helm_repo.stdout"
+  when: k3s_dashboard_enabled | bool
+  tags: [k3s, k3s_dashboard]
+
+- name: Update helm repos
+  ansible.builtin.command: helm repo update
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  changed_when: false
+  when: k3s_dashboard_enabled | bool
+  tags: [k3s, k3s_dashboard]
+
+- name: Check if dashboard release exists
+  ansible.builtin.command: helm status kubernetes-dashboard --namespace {{ k3s_dashboard_namespace }}
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  register: k3s_dashboard_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: k3s_dashboard_enabled | bool
+  tags: [k3s, k3s_dashboard]
+
+- name: Deploy Kubernetes Dashboard
+  ansible.builtin.command:
+    argv:
+      - helm
+      - upgrade
+      - --install
+      - kubernetes-dashboard
+      - kubernetes-dashboard/kubernetes-dashboard
+      - --create-namespace
+      - --namespace
+      - "{{ k3s_dashboard_namespace }}"
+      - --set
+      - kong.proxy.type=NodePort
+      - --set
+      - "kong.proxy.tls.nodePort={{ k3s_dashboard_nodeport }}"
+      - --wait
+      - --timeout
+      - 5m
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  when:
+    - k3s_dashboard_enabled | bool
+    - k3s_dashboard_status.rc != 0 or (k3s_dashboard_force | bool)
+  tags: [k3s, k3s_dashboard]
+
+- name: Create dashboard admin ServiceAccount and ClusterRoleBinding
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl apply -f -
+    stdin: |
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: admin-user
+        namespace: {{ k3s_dashboard_namespace }}
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: admin-user
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+        - kind: ServiceAccount
+          name: admin-user
+          namespace: {{ k3s_dashboard_namespace }}
+  register: k3s_dashboard_rbac
+  changed_when: "'created' in k3s_dashboard_rbac.stdout or 'configured' in k3s_dashboard_rbac.stdout"
+  when: k3s_dashboard_enabled | bool
+  tags: [k3s, k3s_dashboard]
+

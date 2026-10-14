@@ -1,2 +1,4 @@
 .env
 *.env
+*vault.yml
+*/vault.yml

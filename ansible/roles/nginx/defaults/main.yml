@@ -2,3 +2,10 @@
 nginx_conf_src: "{{ inventory_hostname }}/default.conf"     # относительно roles/nginx/files/
 nginx_conf_dest: /etc/nginx/sites-available/default
 nginx_site_enabled_link: /etc/nginx/sites-enabled/default
+
+
+nginx_dashboard_cert_dir: /etc/nginx
+nginx_dashboard_cert_name: dashboard
+# IP или домен, который будет в SAN (Safari без SAN самоподписанный сертификат не принимает)
+nginx_dashboard_cert_ip: "{{ ansible_host }}"
+nginx_dashboard_cert_days: 365

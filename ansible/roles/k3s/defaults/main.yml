@@ -1,0 +1,13 @@
+---
+# Пусто "" = NodePort на всех интерфейсах
+k3s_nodeport_addresses: "127.0.0.0/8"
+# Пусто = последняя stable. Или, например, "v1.31.4+k3s1"
+k3s_version: ""
+
+k3s_kubeconfig: /etc/rancher/k3s/k3s.yaml
+
+k3s_dashboard_enabled: true
+k3s_dashboard_namespace: kubernetes-dashboard
+k3s_dashboard_nodeport: 30443
+# true = выполнить helm upgrade, даже если дашборд уже установлен
+k3s_dashboard_force: false

@@ -1,3 +1,5 @@
+## Установка
+
 ## Дэшборд
 
 ```bash
@@ -7,6 +9,16 @@ helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dash
   --create-namespace --namespace kubernetes-dashboard \
   --set kong.proxy.type=NodePort \
   --set kong.proxy.tls.nodePort=30443
+```
+
+```
+kubectl -n kubernetes-dashboard create token admin-user --duration=2400h
+```
+
+```
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/nginx/dashboard.key -out /etc/nginx/dashboard.crt \
+  -subj "/CN=93.170.246.84"
 ```
 
 ## Первый запуск по шагам

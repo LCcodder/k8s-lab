@@ -6,12 +6,14 @@
 - name: Lafazan homelab
   hosts: lab
   become: true
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - group_vars/vault.yml
-    - host_vars/node.yml
+    - host_vars/lafazan.yml
 
   roles:
-      - { role: packages, tags: [packages] }
-      - { role: docker, tags: [docker] }
-      - { role: repository, tags: [repository] }
+      # - { role: packages, tags: [packages] }
+      # - { role: docker, tags: [docker] }
+      # - { role: repository, tags: [repository] }
+      - { role: nginx, tags: [nginx] }
+      # - { role: k3s, tags: [k3s] }

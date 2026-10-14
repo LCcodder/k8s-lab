@@ -5,6 +5,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     restart: always
+    network_mode: host
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 127.0.0.1:30092
