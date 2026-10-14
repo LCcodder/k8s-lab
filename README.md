@@ -36,6 +36,13 @@
 
 Предметная область приложения — агрегатор баскетбольных матчей (БД `basketball_aggregator`): команды, игроки, игры и подписки пользователей на них.
 
+### Ссылка на приложение и Docker образы
+[Репозиторий с приложением](https://github.com/LCcodder/kafka-template)
+
+Образы **Dockerhub**:
+- `lccodder/kafka-template-producer`
+- `lccodder/kafka-template-consumer`
+
 
 ## Архитектура
 
