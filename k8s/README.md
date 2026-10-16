@@ -27,6 +27,12 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 # неймспейс
 kubectl apply -f namespace.yaml
 
+
+kubectl create secret generic singbox-config \
+  -n kafka-template \
+  --from-file=config.json=./singbox/singbox-config.json
+
+
 # .env -> Secret app-secrets
 kubectl -n kafka-template create secret generic app-secrets --from-env-file=.env
 

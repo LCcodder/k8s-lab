@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -47,3 +48,44 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: DB_PASSWORD
+
+            - name: HTTP_PROXY
+              value: "http://127.0.0.1:10808"
+            - name: HTTPS_PROXY
+              value: "http://127.0.0.1:10808"
+
+        - name: singbox
+          image: ghcr.io/sagernet/sing-box:latest
+          args:
+            - "-D"
+            - "/var/lib/sing-box"
+            - "-c"
+            - "/etc/sing-box/config.json"
+            - "run"
+          ports:
+            - name: proxy
+              containerPort: 10808
+              protocol: TCP
+          volumeMounts:
+            - name: singbox-config
+              mountPath: /etc/sing-box
+              readOnly: true
+            - name: singbox-data
+              mountPath: /var/lib/sing-box
+          readinessProbe:
+            tcpSocket:
+              port: 10808
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+
+      volumes:
+        - name: singbox-config
+          secret:
+            secretName: singbox-config
+        - name: singbox-data
+          emptyDir: {}
