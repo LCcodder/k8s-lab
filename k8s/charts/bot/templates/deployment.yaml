@@ -54,6 +54,11 @@ spec:
             - name: HTTPS_PROXY
               value: "http://127.0.0.1:10808"
 
+            - name: NODE_OPTIONS
+              value: "--require global-agent/bootstrap"
+            - name: GLOBAL_AGENT_HTTP_PROXY
+              value: "http://127.0.0.1:10808"
+
         - name: singbox
           image: ghcr.io/sagernet/sing-box:latest
           args:
